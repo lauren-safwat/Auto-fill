@@ -2,93 +2,54 @@
 
 import re
 import nltk
-import pandas as pd
-
-# Program global variables
-tokens = []
-unigrams = []
-bigrams = []
-trigrams = []
-
-pd.set_option("precision", 2)
 
 # -----------------------------------------------------------------------------
 
 def prepareCorpus():
     # Opening and reading corpus file line by line
-    path = "E:\\FCAI\\4th year , 2nd semester\\NLP\\Assignments\\Assignment 1\\Test.txt"
+    path = "E:\\FCAI\\4th year , 2nd semester\\NLP\\Assignments\\Assignment 1\\Auto fill\\Corpus.txt"
     file = open(path, 'r', encoding='UTF-8')
-    corpus = file.readlines()
+    corpus = file.read()
     file.close()
 
-    for i in range (len(corpus)):
-        # Removing the special characters
-        corpus[i] = re.sub('[\W_]+', ' ', corpus[i])
+    # Removing the special characters
+    corpus = re.sub('[\W_]+', ' ', corpus)
 
-        # Word-tokenization
-        tokens.append(nltk.word_tokenize(corpus[i]))
-
-# -----------------------------------------------------------------------------
-
-def nGrams(n, nGrams):
-    for sentence in tokens:
-        for i in range(len(sentence)-n+1):
-            seq = [sentence[j] for j in range(i, i + n)]
-            seq = " ".join(seq)
-            nGrams.append(seq)
+    # Word-tokenization
+    tokens.extend(nltk.word_tokenize(corpus))
 
 # -----------------------------------------------------------------------------
 
-def calcFreq(nGrams, nGramsModel):
-    for seq in set(nGrams):
-        givenWords = " ".join(seq.split(" ")[:-1])
-        nextWord = " ".join(seq.split(" ")[-1:])
-        nGramsModel.loc[givenWords, nextWord] = nGrams.count(seq)
+def nGramsFreq(n, nGrams):
+    for i in range(len(tokens)-n+1):
+        seq = tokens[i:i+n-1]
+        seq = " ".join(seq)
+        if seq not in nGrams:
+            nGrams[seq] = {}
+        freq = nGrams[seq].get(tokens[i+n-1], 0) + 1
+        nGrams[seq][tokens[i+n-1]] = freq
 
 # -----------------------------------------------------------------------------
 
-def calcProb(nGrams, nGramModel):
-    for i in range(nGramModel.shape[0]):
-        nGramModel.iloc[i,:] /= nGrams.count(nGramModel.index.values[i])
-
-# -----------------------------------------------------------------------------
-
-def writeToFile(fileName, nGramModel):
-    path = "E:\\FCAI\\4th year , 2nd semester\\NLP\\Assignments\\Assignment 1\\" + fileName
-    nGramModel.to_csv(path, mode='w', float_format='%.3f', encoding='UTF-8', header=True, index=True)
-
-# -----------------------------------------------------------------------------
-
-def trainModel():
-    prepareCorpus()
-
-    nGrams(1, unigrams)
-    nGrams(2, bigrams)
-    nGrams(3, trigrams)
-
-    bigramModel = pd.DataFrame(index=set(unigrams), columns=set(unigrams), data=0)
-    trigramModel = pd.DataFrame(index=set(bigrams), columns=set(unigrams), data=0)
-
-    calcFreq(bigrams, bigramModel)
-    calcFreq(trigrams, trigramModel)
-
-    calcProb(unigrams, bigramModel)
-    calcProb(bigrams, trigramModel)
-
-    writeToFile("Bigram.csv", bigramModel)
-    writeToFile("Trigram.csv", trigramModel)
+def calcProb(nGrams):
+    for key in nGrams:
+        keyProb = float(sum(nGrams[key].values()))
+        for word in nGrams[key].keys():
+            nGrams[key][word] /= keyProb
+        nGrams[key] = sorted(nGrams[key].items(), key=lambda x: x[1], reverse=True)
 
 # -----------------------------------------------------------------------------
 
 # Main:
 
-trainModel()
-# print(tokens)
-# print()
-# print("\n".join(bigrams))
-# print()
-# print("\n".join(trigrams))
-# print()
-# print(bigramModel)
-# print()
-# print(trigramModel)
+tokens = []
+bigramsModel = {}
+trigramsModel = {}
+
+prepareCorpus()
+
+nGramsFreq(2, bigramsModel)
+nGramsFreq(3, trigramsModel)
+
+calcProb(bigramsModel)
+calcProb(trigramsModel)
