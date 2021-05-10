@@ -1,1 +1,1 @@
-# Auto-fill Program with a simple GUI
+# Auto-completion of sentences Program using NLP with a simple GUI
