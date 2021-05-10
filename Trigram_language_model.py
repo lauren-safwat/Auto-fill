@@ -14,16 +14,13 @@ def prepareCorpus():
     # Opening and reading corpus file line by line
     file = open("E:\\FCAI\\4th year , 2nd semester\\NLP\\Assignments\\Assignment 1\\report_1.txt", "r",
                 encoding='UTF-8')
-    corpus = file.readlines()
+    corpus = file.read()
 
-    for i in range(len(corpus)):
-        # Removing the special characters
-        corpus[i] = re.sub('[\W_]+', ' ', corpus[i])
+    # Removing the special characters
+    corpus = re.sub('[\W_]+', ' ', corpus)
 
-        # Word-tokenization
-        words = nltk.word_tokenize(corpus[i])
-        tokens.extend(words)
-
+    # Word-tokenization
+    tokens.extend(nltk.word_tokenize(corpus))
 
 # -----------------------------------------------------------------------------
 
